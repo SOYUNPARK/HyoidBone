@@ -1,0 +1,22 @@
+% Sample : 20170002_NS_0m46s-0m48s_1401-1443.avi
+% Date : Sat Apr  8 04:43:28 2017
+% User : Taejin
+% Serial number : 991
+% Total frame number : 43
+% Play time : 1.48276
+% FPS : 29
+% Time interval : 0.0353038
+% Resting Position Frame number : 1
+% Burst End Position Frame number : 21
+% Data order : Frame number / Velocity of HyoidBone / velocity of Hyoid Bone (x-axis) / average velocity of 3 Hyoid Bone (x-axis)
+1, Hyoid Movement Duration, 0.706076
+2, Hyoid Maximum Position (X), 36.6283
+3, Hyoid Maximum Position (Y), 31.0726
+4, Hyoid Maximum Position (XY), 48.3787
+5, Hyoid Maximum Displacement (Anterior), 4.6075
+6, Hyoid Maximum Displacement (Superior)13.7526
+7, Hyoid Maximum Displacement (Hypotenuse)13.8351
+8, Hyoid Average Velocity (Anterior), 6.5255
+9, Hyoid Average Velocity (Superior), 19.4775
+10, Hyoid Average Velocity (Hypotenuse), 19.5943
+11, Hyoid Maximum Velocity = Max (Velocity_of_eachframe), 48.3787
