@@ -9,9 +9,9 @@ int main(int argc, char *argv[]) {
 	int frameNum = 0;
 	ifstream file_sample;
 	ofstream file_new;
-	double time = 0;
+	double timeInterval = 0;
 
-	string uri = argv[1];  //text file name
+	string uri = argv[1];  //text file path
 
 	file_sample.open(uri);   //check if file was successfully opened  
 	if (file_sample.fail()) {
@@ -32,10 +32,10 @@ int main(int argc, char *argv[]) {
 		else if (strncmp(line.c_str(), "% Time interval", 8) == 0) {
 			stringstream tist(line);  //to get time interval for HMMD
 			string ticontext;
-			for (int k = 0; k < 6; k++) {
+			for (int k = 0; k < 5; k++) {
 				getline(tist, ticontext, ' ');
 			}
-			time = stod(ticontext); //stod() : convert frameNumber string to double
+			timeInterval = stod(ticontext); //stod() : convert frameNumber string to double
 		}
 	}
 
@@ -86,41 +86,26 @@ int main(int argc, char *argv[]) {
 	double HAV_S;//hyoid average velocity superior = HMD_S / HMD
 	double HAV_H;//hyoid average velocity hypotenuse = HMD_H / HMD
 
-	double MAX;//hyoid maximum velocity(velocity of each frame)
+	double MAX_V;//hyoid maximum velocity(velocity of each frame)
 
-	//to get the resting position 
-	/*
-	double rest_y;
+	double restingPos;
 	int rest_frameNum;
-	rest = h_y[0];
-	for (int i = 0; i < frameNum; i++) {    //the resting position of hyoid bone = the lowest position = minimum of h_y
-		if (rest > h_y[i]) {
-			rest = h_y[i];
-			rest_frameNum = fn[i];
-		}
-		else {
-			continue;
-		}
-	}
-	*/
-
-	double rest;
-	int rest_frameNum;
-	rest = h_y[0];
+	restingPos = h_y[0];
 	rest_frameNum = fn[0];
 
-	double max_dis;  //to get the Burst end position
+	double burstEnd;  //to get the Burst end position
 	int max_frameNum;
-	max_dis = dis[0];
+	burstEnd = dis[0];
 	for (int i = 0; i < frameNum; i++) {   //the Burst end position = maximum of dis
-		if (max_dis < dis[i]) {
-			max_dis = dis[i];
+		if (burstEnd < dis[i]) {
+			burstEnd = dis[i];
 			max_frameNum = fn[i];
 		}
 		else {
 			continue;
 		}
 	}
+
 	double max_x;  //to get maximum anterior displacement = HMD_A
 	int max_frameNum2;
 	max_x = h_x[0];
@@ -146,36 +131,38 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	HMD = abs(max_frameNum - rest_frameNum) * time;
 
-	HMP_X = h_x[max_frameNum];
-	HMP_Y = h_y[max_frameNum];
-	HMP_XY = max_dis;  //Burst end position
+	HMD = abs(max_frameNum - rest_frameNum) * timeInterval;
 
-	HMD_A = max_x - h_x[rest_frameNum];
-	HMD_S = max_y - rest;  // = max_y - h_y[rest_frameNum]
-	HMD_H = sqrt(pow(HMP_X - h_x[rest_frameNum], 2) + (pow(HMP_Y - h_y[rest_frameNum], 2)));
+	HMP_X = h_x[max_frameNum - 1];
+	HMP_Y = h_y[max_frameNum - 1];
+	HMP_XY = burstEnd;  //Burst end position
+
+	HMD_A = h_x[max_frameNum - 1] - h_x[rest_frameNum - 1];
+	HMD_S = h_y[max_frameNum - 1] - restingPos;  // = max_y - h_y[rest_frameNum]
+	HMD_H = sqrt(pow(HMP_X - h_x[rest_frameNum - 1], 2) + (pow(HMP_Y - h_y[rest_frameNum - 1], 2)));
 
 	HAV_A = HMD_A / HMD;
 	HAV_S = HMD_S / HMD;
 	HAV_H = HMD_H / HMD;
 
 	double * vofh = new double[frameNum];   //
-	for (int i = 0; i < (frameNum); i++) {
+	for (int i = 0; i < frameNum; i++) {
 		if (i < (frameNum - 1)) {
-			vofh[i] = sqrt(pow(h_x[i + 1] - h_x[i], 2) + pow(h_y[i + 1] - h_y[i], 2)) / time;  //calculate velocity of hyoid bone for MAX
+			vofh[i] = sqrt(pow(h_x[i + 1] - h_x[i], 2) + pow(h_y[i + 1] - h_y[i], 2)) / timeInterval;  //calculate velocity of hyoid bone for MAX
 		}
 		else {
 			vofh[i] = -9999;
 		}
 	}
+
 	//to get maximum velocity of hyoid bone for MAX
-	int max_frameNumh;
-	MAX = vofh[0];
+	int max_frameNumV;
+	MAX_V = vofh[0];
 	for (int i = 0; i < frameNum; i++) {
-		if (MAX < dis[i]) {
-			MAX = dis[i];
-			max_frameNumh = fn[i];
+		if (MAX_V < dis[i]) {
+			MAX_V = dis[i];
+			max_frameNumV = fn[i];
 		}
 		else {
 			continue;
@@ -198,20 +185,23 @@ int main(int argc, char *argv[]) {
 		getline(file_sample2, line2);
 		file_new << line2 << endl;
 	}
-	file_new << "% Resting Position Frame number : " << fn[0] << endl; //add Resting position frame number under the original comments
+	file_new << "% Resting Position Frame number : " << rest_frameNum << endl; //add Resting position frame number under the original comments
 	file_new << "% Burst End Position Frame number : " << max_frameNum << endl;  //add Burst ending frame number under the original comments
 	file_new << "% Data order : Frame number / Velocity of HyoidBone / velocity of Hyoid Bone (x-axis) / average velocity of 3 Hyoid Bone (x-axis)" << endl;
 	file_new << "1, Hyoid Movement Duration, " << HMD << endl;
 	file_new << "2, Hyoid Maximum Position (X), " << HMP_X << endl;
 	file_new << "3, Hyoid Maximum Position (Y), " << HMP_Y << endl;
 	file_new << "4, Hyoid Maximum Position (XY), " << HMP_XY << endl;
+	file_new << "	4.1, Hyoid Maximum position (X-axis), " << max_x << endl;
+	file_new << "	4.2, Hyoid Maximum position (Y-axis), " << max_y << endl;
 	file_new << "5, Hyoid Maximum Displacement (Anterior), " << HMD_A << endl;
 	file_new << "6, Hyoid Maximum Displacement (Superior)" << HMD_S << endl;
 	file_new << "7, Hyoid Maximum Displacement (Hypotenuse)" << HMD_H << endl;
 	file_new << "8, Hyoid Average Velocity (Anterior), " << HAV_A << endl;
 	file_new << "9, Hyoid Average Velocity (Superior), " << HAV_S << endl;
 	file_new << "10, Hyoid Average Velocity (Hypotenuse), " << HAV_H << endl;
-	file_new << "11, Hyoid Maximum Velocity = Max (Velocity_of_eachframe), " << MAX << endl;
+	file_new << "11, Hyoid Maximum Velocity = Max (Velocity_of_eachframe), " << MAX_V << endl;
+
 
 	file_new.close();
 
