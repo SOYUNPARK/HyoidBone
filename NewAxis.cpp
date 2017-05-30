@@ -228,3 +228,5 @@ int main(int argc, char *argv[]) { /// 명령 프롬프트에서 실행파일과 txt파일명 입
 	delete[] vofh;
 	return 0;
 }
+
+/*kkr first commit*/
